@@ -9,11 +9,16 @@ Everything is in **`index.html`**: the art, animation, music and sound effects a
 - **Quickest:** open `index.html` in any browser.
 - **On your iPhone:** host it (see below), open the link in Safari, then choose Share → **Add to Home Screen** so it opens full-screen like an app.
 
-## Host it (free, about 2 minutes)
+## Text it to her
 
-**GitHub Pages:** in this repo go to Settings → Pages → Source: *Deploy from a branch*, pick your branch and `/ (root)`, then save. After about a minute you get a link like `https://<you>.github.io/<repo>/`.
+The link is **https://jcarballo94.github.io/Claude/**. It works once GitHub Pages is turned on, which is a one-time step of about 30 seconds:
 
-Or drag the file onto [Netlify Drop](https://app.netlify.com/drop) to get an instant link.
+1. On GitHub, open this repo and go to **Settings → Pages**.
+2. Under **Build and deployment**, set Source to **Deploy from a branch**.
+3. Pick the branch `claude/surprise-for-eli-app-jh0hqc`, folder `/ (root)`, then click **Save**.
+4. Wait a minute or two, then open the link on your phone to check it.
+
+When you text the link, iMessage shows a preview card with the title screen (`preview.png`). The card doesn't spoil anything.
 
 ## Tips before you hand her the phone
 
