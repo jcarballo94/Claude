@@ -228,8 +228,9 @@ a.btn{text-decoration:none;display:inline-block}
     <div class="step fk" data-wait="900" data-sfx="levelup">QUEST COMPLETE</div>
     <div class="step fs" data-wait="1300">You collected <b id="finalCount">0</b> hearts.</div>
     <div class="step fs" data-wait="1600">(I have infinitely more for you.)</div>
-    <div class="step fs" data-wait="1900">From the new hostess…<br>to my shift leader…<br>to my Valentine…</div>
+    <div class="step fs" data-wait="1900">From the new hostess…<br>to my shift leader…<br>to my Valentine…<br>to the woman running the whole office…</div>
     <div class="step fb" data-wait="2600" data-sfx="reveal">…to my wife.</div>
+    <div class="step fs" data-wait="2000">(and me? still in training.<br>still learning to love you better every day.)</div>
     <div class="step fl" data-wait="2200" data-sfx="chime">LEVEL ∞ · FOREVER<br>UNLOCKED 💍</div>
     <div class="step row" data-wait="1400"><button id="again" class="btn ghost">↺ PLAY AGAIN</button><a class="btn" href="../">OUR STORY ❤️</a></div>
   </section>
@@ -567,6 +568,7 @@ const ACC = {
   tux(P) { for (let r = 11; r < 15; r++) P(6, r, '#ffffff'); P(5, 11, '#e2345f'); P(7, 11, '#e2345f'); P(6, 11, '#b01f45'); },
   veil(P) { g.globalAlpha = .6; for (let r = 1; r < 16; r++) for (let c = 0; c < (r < 4 ? 3 : 4); c++) P(c, r, '#ffffff'); g.globalAlpha = 1; for (const c of [3, 5, 7]) P(c, 0, '#ffffff'); },
   bouquet(P) { P(10, 12, '#ff6f91'); P(11, 12, '#ffffff'); P(10, 11, '#ffd1dc'); P(11, 13, '#ff6f91'); P(10, 14, '#3fae6b'); },
+  nametag(P) { P(4, 12, '#ffffff'); P(5, 12, '#ffffff'); P(4, 13, '#9fd8ff'); P(5, 13, '#ffffff'); },
   glasses(P) { for (const c of [5, 7, 8, 10]) P(c, 7, '#b8b8d8'); },
 };
 function drawActors(dt) { if (!scene || !scene.actors) return; for (const a of scene.actors) drawChar(a, scene.gy + (scene.cam || 0), dt); }
@@ -690,6 +692,9 @@ const CONFIG = {
     { theme: 'valentine', label: 'LEVEL 4 · FEBRUARY 14', title: 'Valentine\u2019s at Agave Bandido',
       memory: 'February 14th. Agave Bandido. Our very first date, and the start of everything.',
       girl: { D: '#e2345f', d: '#b01f45' }, boy: { C: '#f4f0ff', c: '#d4cfe8', P: '#2b3050' } },
+    { theme: 'dental', label: 'LEVEL 5 · TODAY', title: 'running the whole show',
+      memory: 'Front desk to running payroll. You make it look easy, and I\u2019m so proud of you.',
+      girl: { D: '#8a6ad8', d: '#6a4fb8' }, boy: { C: '#c23a3a', c: '#9a2a2a', P: '#2b3050' }, bacc: ['nametag'] },
   ],
 };
 
@@ -714,6 +719,10 @@ const OBS = {
   rooster: { w: 8, h: 9, draw(x, gy, t) { const b = Math.floor(t / 260) % 2; px(x, gy - 8, '#1f4a3a'); px(x, gy - 7, '#2f6a52'); px(x + 1, gy - 7, '#1f4a3a'); rect(x, gy - 6, 2, 2, '#2f6a52'); rect(x + 1, gy - 5, 5, 3, '#c2452d'); rect(x + 2, gy - 4, 3, 1, '#e8a04a'); rect(x + 5, gy - 8 + b, 2, 3, '#c2452d'); px(x + 5, gy - 9 + b, '#ff3040'); px(x + 6, gy - 9 + b, '#ff3040'); px(x + 7, gy - 7 + b, '#ffd166'); px(x + 6, gy - 7 + b, K_); px(x + 6, gy - 5 + b, '#ff3040'); rect(x + 3, gy - 2, 1, 2, '#ffd166'); rect(x + 4, gy - 2, 1, 2, '#ffd166'); } },
   cart: { w: 9, h: 7, draw(x, gy) { const c = '#b8c0cc'; rect(x, gy - 7, 9, 1, c); rect(x + 1, gy - 3, 7, 1, c); for (let i = 0; i < 9; i += 2) rect(x + i, gy - 7, 1, 4, c); rect(x + 1, gy - 2, 1, 1, c); rect(x + 7, gy - 2, 1, 1, c); px(x + 1, gy - 1, K_); px(x + 7, gy - 1, K_); rect(x, gy - 6, 9, 1, 'rgba(184,192,204,.5)'); } },
   cactus: { w: 6, h: 10, draw(x, gy) { rect(x, gy - 3, 6, 3, '#c2603a'); rect(x, gy - 3, 6, 1, '#e07a52'); rect(x + 2, gy - 10, 2, 7, '#3f9a5a'); rect(x + 1, gy - 7, 1, 2, '#3f9a5a'); px(x + 1, gy - 8, '#3f9a5a'); rect(x + 4, gy - 8, 1, 2, '#3f9a5a'); px(x + 4, gy - 9, '#3f9a5a'); px(x + 3, gy - 10, '#ff8fab'); } },
+  officechair: { w: 7, h: 10, draw(x, gy) { rect(x + 5, gy - 10, 2, 5, '#2a2f45'); rect(x, gy - 6, 7, 2, '#2a2f45'); rect(x, gy - 6, 7, 1, '#3d4460'); rect(x + 3, gy - 4, 1, 2, K_); rect(x, gy - 2, 7, 1, K_); px(x, gy - 1, K_); px(x + 6, gy - 1, K_); px(x + 3, gy - 1, K_); } },
+  papers: { w: 6, h: 6, draw(x, gy) { for (let r = 0; r < 6; r++) rect(x + (r % 2), gy - 6 + r, 5, 1, r % 2 ? '#dcd8e8' : '#ffffff'); px(x + 2, gy - 5, '#3fae6b'); px(x + 2, gy - 4, '#3fae6b'); px(x + 3, gy - 3, '#3fae6b'); } },
+  files: { w: 8, h: 6, draw(x, gy) { rect(x, gy - 6, 8, 6, '#c9a27a'); rect(x, gy - 6, 8, 1, '#a8825a'); rect(x + 2, gy - 4, 4, 2, '#fff4e6'); rect(x + 3, gy - 6, 2, 1, '#6a4a2a'); } },
+  plant: { w: 6, h: 10, draw(x, gy) { rect(x + 1, gy - 3, 4, 3, '#e8e0d0'); rect(x + 1, gy - 3, 4, 1, '#ffffff'); for (const [dx, dy] of [[0, -4], [-1, -6], [1, -7], [2, -9], [3, -7], [4, -6], [5, -4], [2, -5]]) rect(x + dx, gy + dy, 2, 2, '#3f9a5a'); } },
   lantern: { w: 5, h: 10, draw(x, gy, t) { rect(x + 2, gy - 8, 1, 8, K_); rect(x + 1, gy - 11, 3, 3, K_); rect(x + 2, gy - 10, 1, 1, '#ffcf70'); glow(x + 2.5, gy - 9.5, 4, '#ffcf70', .15 + .05 * Math.sin(t * .004)); rect(x, gy - 1, 5, 1, K_); } },
 };
 
@@ -748,6 +757,18 @@ const THEMES = {
     rect(0, gy - 4, W, 4, '#8a8098'); rect(0, gy - 4, W, 1, '#a89eb6');
     sky(gy, H, ['#3a3650', '#2e2a42', '#27243a', '#211f33']);
     for (let x = wrap(-c, 16) - 16; x < W; x += 16) rect(x, gy + 12, 8, 1, '#e8c36a');
+  } },
+  dental: { obs: ['officechair', 'papers', 'files', 'plant'], bg(s, t) {
+    const gy = s.gy, c = s.camX, wallB = gy - 22, TOOTH = [".WWW.", "WWWWW", "WWWWW", "WWWWW", "WW.WW", "W...W"];
+    sky(0, wallB, ['#cfeee6', '#c3e8df', '#b7e2d8', '#abdcd1']);
+    for (let k = Math.floor(c * .35 / 70) - 1; k < Math.floor(c * .35 / 70) + 3; k++) { const x = Math.round(k * 70 + 8 - c * .35), y = Math.round(H * .12);
+      rect(x - 1, y - 1, 30, 26, '#8aa8a2'); sky(y, y + 24, ['#ffb86b', '#ff8a7a', '#d06a9a', '#7a5aa8'], x, 28); disc(x + 18, y + 17, 4, '#ffe0a0'); palm(x + 6, y + 24, 14, '#3a2a4a'); rect(x + 13, y, 1, 24, '#8aa8a2'); rect(x, y + 12, 28, 1, '#8aa8a2'); }
+    for (let k = Math.floor(c * .5 / 90) - 1; k < Math.floor(c * .5 / 90) + 3; k++) { const x = Math.round(k * 90 + 55 - c * .5), y = Math.round(H * .3); rect(x, y, 14, 16, '#1a1030'); rect(x + 1, y + 1, 12, 14, '#e6f4ff'); drawSprite(TOOTH, x + 4, y + 4, { W: '#ffffff' }); for (let i = 0; i < 5; i++) { px(x + 4 + i, y + 3, '#5aa0e0'); } px(x + 4, y + 12, '#ff8fab'); px(x + 8, y + 12, '#ff8fab'); }
+    rect(0, wallB, W, 2, '#ffffff'); rect(0, wallB + 2, W, 16, '#e8f2f0');
+    for (let k = Math.floor(c * .85 / 60) - 1; k < Math.floor(c * .85 / 60) + 4; k++) { const x = Math.round(k * 60 + 20 - c * .85); rect(x, wallB - 8, 10, 7, '#2a2f45'); rect(x + 1, wallB - 7, 8, 5, '#6fd3ff'); rect(x + 4, wallB - 1, 2, 1, '#2a2f45'); rect(x + 16, wallB - 3, 6, 3, '#ffffff'); rect(x + 17, wallB - 4, 4, 1, '#dcd8e8'); }
+    for (let k = Math.floor(c * .85 / 30); k < Math.floor(c * .85 / 30) + 5; k++) rect(Math.round(k * 30 - c * .85), wallB + 4, 1, 14, '#cfdcd9');
+    sky(gy - 4, H, ['#eef0f4', '#e2e5ec', '#d6dae4', '#cacfdb', '#bec4d2']);
+    for (let y = gy + 2, r = 0; y < H; y += 8, r++) { rect(0, y, W, 1, '#b8bfcc'); for (let x = wrap(-c + r * 4, 16) - 16; x < W; x += 16) rect(x, y - 7, 1, 7, '#b8bfcc'); }
   } },
   valentine: { obs: ['cactus', 'stool', 'lantern'], bg(s, t) {
     const gy = s.gy, c = s.camX, m = s.magic || 0;
@@ -902,6 +923,16 @@ const CUTS = {
   async hialeah(s) { const { girl, boy } = s; await walkTo(girl, boy.x - 13, 26); boy.blush = 1;
     await say(boy, 'Wanna hang out after close?'); await wait(600); clearBubbles(); girl.blush = 1; await say(girl, 'Thought you\u2019d never ask.');
     floatHearts((girl.x + boy.x) / 2, headY(boy) - 2, 3); SFX.heart(); await Promise.all([hop(boy, 3), wait(120).then(() => hop(girl, 3))]); await wait(300); },
+  async dental(s) {
+    const { girl, boy } = s; boy.icon = icon('heart'); await walkTo(girl, boy.x - 13, 24); boy.icon = null;
+    await say(boy, 'Long day, boss?'); await wait(600); clearBubbles(); girl.blush = 1; girl.mouth = 'smile'; await say(girl, 'Payroll\u2019s done 😌'); await wait(800); clearBubbles();
+    boy.blush = 1; await walkTo(girl, boy.x - 11, 8); girl.tiptoe = 1; girl.eyes = boy.eyes = 'closed'; girl.blush = boy.blush = 2; girl.mouth = boy.mouth = 'none';
+    SFX.kiss(); flash(600, .3); burst((girl.x + boy.x) / 2, headY(boy) + 2, 26, 46);
+    await wait(2200); girl.tiptoe = 0; girl.eyes = boy.eyes = 'open'; girl.mouth = boy.mouth = 'smile'; await wait(500);
+    const cx = (girl.x + boy.x) / 2, y0 = headY(boy) - 4; s.big = { x: cx, y: y0, k: 1 }; SFX.heart();
+    await tween(1800, e => s.big.y = lerp(y0, H * .42, e)); SFX.reveal();
+    await tween(1800, e => s.big.k = 1 + e * e * 46, EASE.lin); await tween(400, e => s.fill = e);
+  },
   async valentine(s) {
     const { girl, boy } = s; s.rose = { x: boy.x - 5, y: s.gy - 3 }; await walkTo(girl, boy.x - 13, 22); boy.blush = 1;
     await say(boy, 'Happy Valentine\u2019s Day.'); await wait(600); clearBubbles();
@@ -910,9 +941,7 @@ const CUTS = {
     await walkTo(girl, boy.x - 11, 8); s.rose.x = girl.x + 5; girl.tiptoe = 1; girl.eyes = boy.eyes = 'closed'; girl.blush = boy.blush = 2; girl.mouth = boy.mouth = 'none';
     SFX.kiss(); flash(600, .3); burst((girl.x + boy.x) / 2, headY(boy) + 2, 26, 46); tween(2600, e => s.magic = e);
     await wait(2400); girl.tiptoe = 0; girl.eyes = boy.eyes = 'open'; girl.mouth = boy.mouth = 'smile'; await wait(600);
-    const cx = (girl.x + boy.x) / 2, y0 = headY(boy) - 4; s.big = { x: cx, y: y0, k: 1 }; SFX.heart();
-    await tween(1800, e => s.big.y = lerp(y0, H * .42, e)); SFX.reveal();
-    await tween(1800, e => s.big.k = 1 + e * e * 46, EASE.lin); await tween(400, e => s.fill = e);
+    floatHearts((girl.x + boy.x) / 2, headY(boy) - 4, 4); SFX.heart(); await wait(500);
   },
   async park(s) { const { girl, boy } = s; boy.icon = icon('!'); SFX.pop(); await wait(500); boy.icon = icon('heart'); boy.blush = 1; SFX.heart(); await walkTo(girl, boy.x - 13, 26); boy.icon = null; await say(boy, 'Hi…'); await wait(600); clearBubbles(); await say(girl, 'Hi ❤️'); floatHearts(girl.x, headY(girl), 3); SFX.heart(); boy.blush = 2; await hop(boy, 4); await wait(300); },
   async market(s) { const { girl, boy } = s; s.cone = { x: boy.x - 5, y: s.gy - 4 }; await walkTo(girl, boy.x - 14, 26); await say(boy, 'Want some?'); await wait(500); clearBubbles(); await tween(400, e => s.cone.x = lerp(boy.x - 5, girl.x + 5, e)); await say(girl, 'Always.'); girl.nose = true; SFX.nom(); await wait(200); boy.eyes = girl.eyes = 'closed'; boy.mouth = girl.mouth = 'open'; SFX.giggle(); await Promise.all([hop(boy, 3), wait(120).then(() => hop(girl, 3))]); floatHearts((girl.x + boy.x) / 2, headY(boy), 3); boy.eyes = girl.eyes = 'open'; boy.mouth = girl.mouth = 'smile'; await wait(300); },
