@@ -26,3 +26,8 @@ Little "movie release" pieces to text Eli over the day, ending with the link. Se
 - If she asks what it is, stay mysterious: "you'll see 😌"
 - On iPhone: save each file to Photos, then in Messages tap the Photos button and pick it. GIFs send animated, and the trailer sends as a video with sound.
 - The trailer is 38 seconds, vertical, and only uses the first four chapters plus one starry shot. It doesn't show the kiss or the ending.
+
+## Extras
+
+- `poster.png`: a movie poster sized for an iPhone wallpaper (1180×2560). Send it after she's seen the story: "the official poster. set it as your wallpaper, it's required 😌"
+- `../stickers/`: 12 animated stickers with transparent backgrounds for everyday texting: hi, miss you, mwah, sorry, hungry?, good morning, good night, proud of you, come home, love you, ur cute, haha.
