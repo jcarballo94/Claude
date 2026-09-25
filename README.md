@@ -29,4 +29,4 @@ When you text the link, iMessage shows a preview card with the title screen (`pr
 ## Testing shortcuts (for you, not her)
 
 Add `?at=` to the URL to jump straight to a part:
-`?at=market`, `?at=walk`, `?at=hill`, `?at=finale`, `?at=surprise`
+`?at=after`, `?at=walk`, `?at=valentine`, `?at=finale`, `?at=surprise`

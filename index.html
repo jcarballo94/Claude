@@ -358,6 +358,7 @@ const AudioSys = (() => {
   const bell = (m, t, g) => { tone(mtof(m), t, .9, 'sine', g, sfx, { pluck: true, r: .9 }); tone(mtof(m) * 2.76, t, .4, 'sine', g * .25, sfx, { pluck: true, r: .5 }); };
   const SFX = {
     tap() { blip(990, 1480, .05, 'pulse', .06); },
+    crow() { [[600, 900], [900, 1100], [1100, 700]].forEach(([a, b], i) => blip(a, b, .12, 'pulse', .045, i * .12)); },
     pop() { blip(520, 1100, .08, 'triangle', .14); },
     heart() { arp([81, 85, 88], .07, .12, .09); },
     voice(k) { const b = k === 'girl' ? 740 : 470; blip(b * rand(.93, 1.1), null, .035, 'pulse', .035); },
@@ -651,44 +652,42 @@ function tap(label = 'TAP') {
 function chapter(num, name) { const el = $('#chapter'); el.innerHTML = `<div class="cn">${num}</div><div class="cname">${name}</div>`; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 function flash(ms = 500, a = 1) { const f = $('#flash'); f.style.transition = 'none'; f.style.opacity = a; void f.offsetWidth; f.style.transition = `opacity ${ms}ms ease`; f.style.opacity = 0; }
 
+/* ---------- shared bits for the real-story scenes ---------- */
+const wrap = (x, p) => ((x % p) + p) % p;
+const WORK_BOY = { C: '#2a2a3e', c: '#1c1c2c', P: '#1c1c2c' }, WORK_GIRL = { D: '#23233a', d: '#16162a' };
+const PASTELITO = ["TTTTT", "TPPPT", "TTTTT"], PAST_PAL = { T: '#e0a458', P: '#ff4d7a' };
+function palm(x, gy, h, c) { let tx = x, ty = gy; for (let i = 0; i < h; i++) { tx = x + Math.sin(i / h * 1.6) * 3; ty = gy - i; rect(tx, ty, 2, 1, c); } for (const [dx, dy] of [[-1, 0], [1, 0], [-1, .5], [1, .5], [-.6, -.5], [.6, -.5], [0, -1]]) for (let k = 1; k < 8; k++) px(tx + 1 + dx * k, ty + dy * k + (Math.abs(dx) > .8 ? k * k * .06 : 0), c); }
+function rooster(x, gy, t) { const K = '#1a1030', b = Math.floor(t / 260) % 2; px(x, gy - 8, '#1f4a3a'); px(x, gy - 7, '#2f6a52'); px(x + 1, gy - 7, '#1f4a3a'); rect(x, gy - 6, 2, 2, '#2f6a52'); rect(x + 1, gy - 5, 5, 3, '#c2452d'); rect(x + 2, gy - 4, 3, 1, '#e8a04a'); rect(x + 5, gy - 8 + b, 2, 3, '#c2452d'); px(x + 5, gy - 9 + b, '#ff3040'); px(x + 6, gy - 9 + b, '#ff3040'); px(x + 7, gy - 7 + b, '#ffd166'); px(x + 6, gy - 7 + b, K); px(x + 6, gy - 5 + b, '#ff3040'); const l = Math.floor(t / 180) % 2; rect(x + 3, gy - 2, 1, 2 - l, '#ffd166'); rect(x + 4, gy - 2, 1, 1 + l, '#ffd166'); }
+
 /* =========================================================
-   SCENE 1 — The park at dusk: the first hello
+   SCENE 1 — The sushi restaurant in Hialeah: the new hostess
    ========================================================= */
-function retroSun(cx, cy, r) {
-  glow(cx, cy, r * 2.4, '#ff8fab', .07); glow(cx, cy, r * 1.6, '#ffb38a', .1);
-  for (let dy = -r; dy <= r; dy++) { if (dy > 1 && dy % 3 === 0) continue; const h = Math.floor(Math.sqrt(r * r - dy * dy)); rect(cx - h, cy + dy, h * 2 + 1, 1, mix('#ffe9a0', '#ff5d8f', (dy + r) / (2 * r))); }
-}
-function scenePark() {
-  const s = { name: 'park' };
+function sceneSushi() {
+  const s = { name: 'sushi' };
   s.layout = () => { s.gy = Math.round(H * .63); }; s.layout();
-  const boy = actor('boy', 15, 1), girl = actor('girl', W - 17, 1);
+  const boy = actor('boy', 15, 1, { costume: WORK_BOY, acc: ['tux'] }), girl = actor('girl', W - 19, 1, { costume: WORK_GIRL });
   s.actors = [boy, girl]; s.boy = boy; s.girl = girl;
-  const stars = [...Array(30)].map(() => ({ x: ri(0, W), y: ri(2, Math.floor(H * .32)), p: rand(0, 6.3), b: Math.random() < .2 }));
-  const blds = []; { let x = -2; while (x < W + 2) { const w = ri(7, 14), h = ri(8, 30), wins = []; for (let yy = 3; yy < h - 2; yy += 4) for (let xx = 2; xx < w - 2; xx += 3) if (Math.random() < .45) wins.push([xx, yy, rand(0, 6.3)]); blds.push({ x, w, h, wins }); x += w + ri(0, 2); } }
-  const flowers = [...Array(28)].map(() => ({ x: ri(0, W), y: rand(.08, 1), c: ['#ff8fab', '#ffd166', '#c3a6ff', '#ffffff'][ri(0, 3)] }));
-  const flies = [...Array(7)].map(() => ({ x: rand(0, W), y: rand(.3, .6), p: rand(0, 6.3), s: rand(.3, .8) }));
-  s.lamp = true;
   s.draw = t => {
-    const gy = s.gy, hy = gy - 5, lx = Math.round(W * .5);
-    sky(0, hy, ['#130d33', '#1c1344', '#291852', '#3c1f60', '#582669', '#7c2f70', '#a53d76', '#cf5579', '#ee7a82']);
-    for (const st of stars) { const a = .5 + .5 * Math.sin(t * .002 + st.p); if (a > .3) px(st.x, st.y, a > .8 ? '#fff' : '#bfb2ff'); if (st.b && a > .85) { const c = '#8f7fe0'; px(st.x - 1, st.y, c); px(st.x + 1, st.y, c); px(st.x, st.y - 1, c); px(st.x, st.y + 1, c); } }
-    retroSun(Math.round(W * .78), hy - 22, 11);
-    for (const b of blds) { rect(b.x, hy - b.h, b.w, b.h + 5, '#241640'); for (const w of b.wins) if (Math.sin(t * .0006 + w[2] * 3) > -.75) px(b.x + w[0], hy - b.h + w[1], '#ffcf70'); }
-    sky(gy - 3, H, ['#3f6e5a', '#2e5549', '#264641', '#1f3a3a', '#1a2f33', '#16252d']);
-    for (let x = 1; x < W; x += 5) px(x, gy - 4, '#4f8a68');
-    for (const f of flowers) { const y = Math.round(gy + 2 + f.y * (H - gy - 4)); px(f.x, y, f.c); px(f.x, y + 1, '#2f5d45'); }
-    // lamp post
-    if (s.lamp) { glow(lx + 1, gy - 36, 18, '#ffcf8a', .08); glow(lx + 1, gy - 36, 10, '#ffe0a8', .12); g.globalAlpha = .12; g.fillStyle = '#ffd79a'; g.beginPath(); g.ellipse(lx + 1, gy, 16, 4, 0, 0, 7); g.fill(); g.globalAlpha = 1; }
-    rect(lx, gy - 34, 2, 34, '#140f28'); rect(lx - 2, gy - 39, 6, 2, '#140f28'); rect(lx - 1, gy - 37, 4, 3, s.lamp ? '#ffe7a8' : '#4b4560'); rect(lx - 1, gy - 1, 4, 1, '#140f28');
-    for (const f of flies) { const x = (f.x + Math.sin(t * .0007 * f.s + f.p) * 8 + W) % W, y = H * f.y + Math.sin(t * .0011 + f.p) * 5; if (Math.sin(t * .003 + f.p * 4) > 0) { px(x, y, '#e7ff8a'); glow(x + .5, y + .5, 2, '#e7ff8a', .15); } }
+    const gy = s.gy, wallB = gy - 24;
+    sky(0, wallB, ['#1e0d12', '#2a1117', '#34151b', '#3d1a1f', '#46201f']);
+    for (let x = 4; x < W; x += 30) rect(x, 0, 3, wallB, '#170a0d');
+    const ax = Math.round(W * .5), ay = Math.round(H * .27);
+    rect(ax - 11, ay - 11, 22, 22, '#170a0d'); rect(ax - 10, ay - 10, 20, 20, '#f2e6d0'); disc(ax, ay, 6, '#c2253a');
+    for (let k = 0; k < 5; k++) { const x = 8 + k * 21 + Math.round(Math.sin(t * .0015 + k)), y = Math.round(H * .11) + (k % 2) * 3;
+      rect(x + 2, 0, 1, y, '#0e0608'); glow(x + 2.5, y + 4, 9, '#ff8a5b', .12); rect(x, y, 5, 1, '#1a1030'); rect(x - 1, y + 1, 7, 6, '#e2453c'); rect(x, y + 1, 5, 6, '#ff5a48'); rect(x, y + 7, 5, 1, '#1a1030'); px(x + 2, y + 3, '#ffd166'); }
+    rect(0, wallB, W, 2, '#d8b48a'); rect(0, wallB + 2, W, 16, '#5a2e22');
+    for (let k = 0; k < 11; k++) { const x = Math.round(wrap(k * 12 + t * .008, W + 12) - 12); rect(x, wallB - 2, 6, 2, '#f4f0ea'); px(x + 1, wallB - 3, ['#ff8a5b', '#ffb3a0', '#e84a4a'][k % 3]); px(x + 3, wallB - 3, '#2a4a2a'); }
+    for (let x = 0; x < W; x += 30) rect(x, wallB + 4, 1, 14, '#46231a');
+    sky(gy - 6, H, ['#7a5038', '#6b4430', '#5c3a29', '#4e3123', '#41291e']);
+    for (let y = gy - 3, r = 0; y < H; y += 5, r++) { rect(0, y, W, 1, '#3a2419'); for (let x = (r * 7) % 22 - 22; x < W; x += 22) rect(x, y - 4, 1, 4, '#3a2419'); }
+    const hx = W - 8; glow(hx + 3, gy - 15, 6, '#ffd79a', .15); rect(hx, gy - 13, 7, 13, '#6b3a22'); rect(hx - 1, gy - 14, 9, 2, '#a86b3c'); rect(hx + 1, gy - 11, 5, 4, '#f2e6d0'); rect(hx + 2, gy - 10, 3, 1, '#c2253a'); rect(hx + 5, gy - 17, 1, 3, '#1a1030'); px(hx + 4, gy - 17, '#ffe7a8');
   };
-  s.onTap = (x, y) => { const lx = Math.round(W * .5); if (Math.abs(x - lx - 1) < 5 && Math.abs(y - (s.gy - 36)) < 6) { s.lamp = !s.lamp; SFX.tap(); } };
   s.focus = () => [(boy.x + girl.x) / 2, s.gy - 10];
   return s;
 }
-async function playPark() {
+async function playSushi() {
   const s = scene, { boy, girl } = s;
-  chapter('CHAPTER 1', 'the first hello');
+  chapter('CHAPTER 1', 'the new hostess');
   await irisTo('circle', 1, 1300, W / 2, s.gy - 12);
   await wait(700);
   boy.icon = icon('!'); SFX.pop(); await hop(boy, 3); await wait(650);
@@ -704,10 +703,10 @@ async function playPark() {
   await wait(200);
   girl.icon = icon('?'); SFX.pop(); await wait(450); girl.face = -1; await wait(650);
   girl.icon = null; girl.mouth = 'smile'; girl.blush = 1; floatHearts(girl.x, headY(girl), 1); await wait(450);
-  boy.blush = 2; await say(boy, 'Hi…'); await wait(250);
+  boy.blush = 2; await say(boy, 'Hi… I’m your manager.'); await wait(250);
   await tap();
   clearBubbles();
-  await say(girl, 'Hi ❤️'); SFX.heart(); floatHearts(girl.x, headY(girl) - 2, 3);
+  await say(girl, 'Hi, boss ❤️'); SFX.heart(); floatHearts(girl.x, headY(girl) - 2, 3);
   boy.mouth = 'smile';
   for (let i = 0; i < 12; i++) setTimeout(() => spawn({ type: 'steam', x: boy.x + rand(-3, 3), y: headY(boy), vx: rand(-3, 3), vy: -14, life: 800 }), i * 110);
   await hop(boy, 5, 360);
@@ -716,78 +715,55 @@ async function playPark() {
 }
 
 /* =========================================================
-   SCENE 2 — Night market: sharing ice cream
+   SCENE 2 — After close in Hialeah: sharing a pastelito
    ========================================================= */
-function sceneMarket() {
-  const s = { name: 'market', items: [] };
+function sceneAfter() {
+  const s = { name: 'after', rx: W + 14, crowed: false };
   s.layout = () => { s.gy = Math.round(H * .64); }; s.layout();
   const cx = Math.round(W / 2);
-  const boy = actor('boy', cx - 9, 1, { mouth: 'smile' }), girl = actor('girl', cx + 9, -1, { mouth: 'smile' });
+  const boy = actor('boy', cx - 9, 1, { mouth: 'smile', costume: WORK_BOY, acc: ['tux'] }), girl = actor('girl', cx + 9, -1, { mouth: 'smile', costume: WORK_GIRL });
   s.actors = [boy, girl]; s.boy = boy; s.girl = girl;
-  const cone = { x: boy.x + 5, y: s.gy - 4, bite: 0 }; s.cone = cone; s.items.push(cone);
-  const stars = [...Array(22)].map(() => ({ x: ri(0, W), y: ri(2, Math.floor(H * .28)), p: rand(0, 6.3) }));
-  const bulbC = ['#ff7a9c', '#ffd36e', '#8fe3ff', '#b18cff'];
-  const far = []; { let x = -3; while (x < W) { const w = ri(10, 18); far.push({ x, w, h: ri(8, 16), c: bulbC[ri(0, 3)] }); x += w + ri(1, 4); } }
-  s.draw = t => {
+  const pas = { x: boy.x + 5, y: s.gy - 4, bite: 0 }; s.cone = pas;
+  const stars = [...Array(22)].map(() => ({ x: ri(0, W), y: ri(2, Math.floor(H * .25)), p: rand(0, 6.3) }));
+  const cols = ['#e0869b', '#5fb7b0', '#e8c36a', '#b58ad8'];
+  s.draw = (t, dt) => {
     const gy = s.gy;
-    sky(0, gy, ['#0d0924', '#140e33', '#1c1242', '#26174d', '#301c56']);
-    for (const st of stars) if (Math.sin(t * .002 + st.p) > -.2) px(st.x, st.y, '#d9d0ff');
-    // far stalls
-    for (const f of far) { rect(f.x, gy - 20 - f.h, f.w, f.h + 20, '#1d1438'); rect(f.x + 1, gy - 20 - f.h, f.w - 2, 2, f.c); glow(f.x + f.w / 2, gy - 12 - f.h, 6, f.c, .07); }
-    // string lights
-    for (const k of [0, 1]) {
-      const top = Math.round(H * (.12 + k * .1)), sag = 10 + k * 4;
-      for (let x = 0; x < W; x++) { const u = (x - W / 2) / (W / 2); px(x, top + sag * (1 - u * u), '#0a0718'); }
-      for (let x = 3 + k * 3, i = 0; x < W; x += 7, i++) { const u = (x - W / 2) / (W / 2), y = top + sag * (1 - u * u) + 1, c = bulbC[(i + k) % 4], on = Math.sin(t * .003 + i * 1.7 + k) > -.6; glow(x + .5, y + 1, 3.5, c, on ? .2 : .06); rect(x, y, 1, 2, on ? c : '#3a2f55'); }
-    }
-    // stall
-    const sw = 46, sx = cx - sw / 2, aw = gy - 44;
-    rect(sx + 2, aw + 6, 2, 44 - 6, '#3b2230'); rect(sx + sw - 4, aw + 6, 2, 44 - 6, '#3b2230');
-    rect(sx + 4, aw + 7, sw - 8, 22, '#3a1f45'); glow(cx, aw + 18, 16, '#ffcf8a', .12);
-    for (let i = 0; i < 4; i++) disc(sx + 10 + i * 9, aw + 16, 2, ['#ffa3c4', '#ffe0a3', '#b8f0d8', '#d6b8ff'][i]);
-    for (let x = 0; x < sw; x++) { const c = Math.floor(x / 4) % 2 ? '#ffe9e0' : '#ff6f91'; rect(sx + x, aw, 1, 6, c); }
-    for (let x = 0; x < sw; x += 4) { rect(sx + x, aw + 6, 3, 1, Math.floor(x / 4) % 2 ? '#ffe9e0' : '#ff6f91'); px(sx + x + 1, aw + 7, Math.floor(x / 4) % 2 ? '#ffe9e0' : '#ff6f91'); }
-    rect(sx - 1, aw - 1, sw + 2, 1, '#1a1030');
-    // sign with a pixel cone + heart
-    rect(cx - 9, aw - 11, 18, 9, '#1a1030'); rect(cx - 8, aw - 10, 16, 7, '#fff4e6');
-    drawSprite(CONE, cx - 6, aw - 10, ITEM_PAL); drawSprite(HEART5, cx + 1, aw - 8, { R: '#ff4d6d' });
-    // counter
-    rect(sx, gy - 16, sw, 3, '#c9765a'); rect(sx + 1, gy - 13, sw - 2, 13, '#8a4b3a');
-    for (let x = sx + 4; x < sx + sw - 2; x += 6) rect(x, gy - 11, 1, 10, '#743d30');
-    // ground tiles
-    sky(gy, H, ['#2c2445', '#251f3c', '#1f1a33', '#1a162c']);
-    for (let y = gy + 3; y < H; y += 6) for (let x = ((y / 6) % 2) * 5; x < W; x += 10) rect(x, y, 8, 1, '#1a1530');
+    sky(0, gy, ['#170e3a', '#261450', '#40195c', '#6a2464', '#a23e6c', '#e0706a']);
+    for (const st of stars) if (Math.sin(t * .002 + st.p) > -.2) px(st.x, st.y, '#e8e0ff');
+    for (let k = 0; k < 4; k++) { const x = k * 30 - 8, h = 16 + (k * 7) % 10, col = mix(cols[k % 4], '#1a1030', .55);
+      rect(x, gy - 6 - h, 27, h + 6, col); rect(x, gy - 6 - h, 27, 2, mix(col, '#000000', .3));
+      if (k === 1) { rect(x + 5, gy - 16, 17, 8, '#ffcf70'); glow(x + 13, gy - 12, 12, '#ffcf70', .15); rect(x + 4, gy - 19, 19, 3, '#1a1030'); rect(x + 10, gy - 23, 7, 4, '#1a1030'); rect(x + 11, gy - 22, 4, 2, '#fff4e6'); px(x + 15, gy - 22, '#fff4e6'); px(x + 12, gy - 21, '#8a4b2a'); }
+      else { for (let yy = 4; yy < h - 2; yy += 5) for (let xx = 3; xx < 24; xx += 6) px(x + xx, gy - 6 - h + yy, (xx + yy + k) % 3 ? '#ffcf70' : mix(col, '#000000', .4)); rect(x + 3, gy - 6 - h + 3, 21, 1, ['#ff5fa2', '#5ff2e0'][k % 2]); } }
+    palm(6, gy - 4, 30, '#1c1233'); palm(W - 8, gy - 4, 26, '#1c1233');
+    rect(0, gy - 4, W, 4, '#8a8098'); rect(0, gy - 4, W, 1, '#a89eb6');
+    s.rx -= dt * .012; if (s.rx < -14) { s.rx = W + 60; s.crowed = false; }
+    if (!s.crowed && s.rx < W * .7) { s.crowed = true; SFX.crow(); }
+    rooster(Math.round(s.rx), gy - 3, t);
+    sky(gy, H, ['#3a3650', '#2e2a42', '#27243a', '#211f33']);
+    for (let x = 4; x < W; x += 16) rect(x, gy + 12, 8, 1, '#e8c36a');
   };
-  s.front = () => {
-    const c = s.cone; if (!c.show && c.show !== undefined) return;
-    const rows = CONE.slice(); if (c.bite) { rows[0] = "...."; rows[1] = "PW.."; }
-    drawSprite(rows, c.x - 2, c.y - 7, ITEM_PAL);
-  };
+  s.front = () => { const c = s.cone; const rows = c.bite ? PASTELITO.map(r => r.slice(0, 3) + '..') : PASTELITO; drawSprite(rows, c.x - 2, c.y - 3, PAST_PAL); };
+  s.onTap = (x, y) => { if (Math.abs(x - s.rx - 4) < 6 && Math.abs(y - (s.gy - 8)) < 7) SFX.crow(); };
   s.focus = () => [cx, s.gy - 10];
   return s;
 }
-async function playMarket() {
+async function playAfter() {
   const s = scene, { boy, girl, cone } = s;
-  chapter('CHAPTER 2', 'sharing is caring');
+  chapter('CHAPTER 2', 'after close');
   await irisTo('circle', 1, 1100, W / 2, s.gy - 12);
   await wait(500);
-  // he offers the ice cream
   boy.icon = icon('heart'); SFX.pop();
   await tween(500, e => { cone.x = lerp(boy.x + 5, girl.x - 6, e); cone.y = lerp(s.gy - 4, s.gy - 7, e); });
   boy.icon = null; await wait(250);
-  // she takes a bite… and gets it on her nose
   await tween(200, e => cone.x = lerp(girl.x - 6, girl.x - 4, e)); cone.bite = 1; girl.nose = true; SFX.nom(); girl.eyes = 'closed';
   await tween(200, e => cone.x = lerp(girl.x - 4, girl.x - 7, e)); girl.eyes = 'open';
   await wait(350);
-  // he laughs at her
   boy.eyes = 'closed'; boy.mouth = 'open'; SFX.giggle();
   for (let i = 0; i < 3; i++) { spawn({ type: 'note', x: boy.x - 4, y: headY(boy) - 2, vx: rand(-6, 2), vy: -16, life: 900, c: '#ffd166' }); await hop(boy, 2, 200); }
   boy.eyes = 'open'; boy.mouth = 'smile';
   girl.icon = icon('!'); SFX.pop(); await wait(400); girl.icon = null;
-  // revenge boop
   await tween(260, e => cone.x = lerp(girl.x - 7, boy.x + 6, e)); boy.nose = true; SFX.boop(); boy.eyes = 'closed';
   await tween(260, e => cone.x = lerp(boy.x + 6, girl.x - 6, e)); boy.eyes = 'open';
-  // both laugh
   boy.eyes = girl.eyes = 'closed'; boy.mouth = girl.mouth = 'open'; SFX.giggle();
   await Promise.all([hop(boy, 3, 260).then(() => hop(boy, 3, 260)), wait(130).then(() => hop(girl, 3, 260)).then(() => hop(girl, 3, 260))]);
   floatHearts(W / 2, headY(boy) - 2, 3); SFX.heart();
@@ -851,7 +827,7 @@ function sceneWalk() {
 }
 async function playWalk() {
   const s = scene, { boy, girl } = s;
-  chapter('CHAPTER 3', 'little adventures');
+  chapter('CHAPTER 3', 'the flirting era');
   await irisTo('heart', 1, 1200, W / 2, s.gy - 14);
   await wait(1500);
   // uh oh, rain
@@ -880,86 +856,79 @@ async function playWalk() {
   await tween(500, e => s.flower.x = lerp(boy.x + 5, girl.x - 4, e));
   girl.eyes = 'closed'; girl.blush = 2; floatHearts(girl.x, headY(girl), 3); SFX.heart();
   await wait(400);
-  await say(boy, 'So… you’re stuck with me.');
+  await say(boy, 'So… Valentine’s Day?');
   await wait(200);
   await tap();
   clearBubbles(); girl.eyes = 'open';
-  await say(girl, 'Good.');
+  await say(girl, 'Took you long enough.');
   girl.x -= 1; s.flower.x -= 1; girl.eyes = 'closed'; boy.eyes = 'closed'; floatHearts(W / 2, headY(girl) - 3, 4);
   await wait(500);
   await tap();
 }
 
 /* =========================================================
-   SCENE 4 — Under the stars: the kiss
+   SCENE 4 — February 14, Agave Bandido: the first kiss
    ========================================================= */
-function sceneHill() {
-  const s = { name: 'hill', magic: 0, cam: 0, wink: 0, cue: false, big: null, fill: 0 };
-  s.layout = () => { s.gy = Math.round(H * .58); }; s.layout();
+function sceneValentine() {
+  const s = { name: 'valentine', magic: 0, cam: 0, wink: 0, cue: false, big: null, fill: 0 };
+  s.layout = () => { s.gy = Math.round(H * .64); }; s.layout();
   const cx = Math.round(W / 2);
-  const boy = actor('boy', cx - 8, 1, { lookUp: true }), girl = actor('girl', cx + 8, -1, { lookUp: true });
+  const boy = actor('boy', cx - 8, 1, { lookUp: true, costume: { C: '#f4f0ff', c: '#d4cfe8', P: '#2b3050' } });
+  const girl = actor('girl', cx + 8, -1, { lookUp: true, costume: { D: '#e2345f', d: '#b01f45' } });
   s.actors = [boy, girl]; s.boy = boy; s.girl = girl;
   const stars = [...Array(70)].map(() => ({ x: ri(0, W), y: rand(0, H), p: rand(0, 6.3), b: Math.random() < .15 }));
   const mstars = [...Array(130)].map(() => ({ x: ri(0, W), y: rand(0, H), p: rand(0, 6.3), m: rand(.05, 1), c: ['#ffffff', '#ffd1dc', '#cfe3ff', '#fff3b0'][ri(0, 3)] }));
-  const lights = [...Array(110)].map(() => ({ x: ri(0, W), y: rand(0, 1), c: ['#ffcf70', '#ffe3a3', '#ff9fb5', '#9fd8ff'][ri(0, 3)], p: rand(0, 6.3) }));
-  const flies = [...Array(8)].map(() => ({ x: rand(0, W), y: rand(-30, 10), p: rand(0, 6.3) }));
-  const blds = []; { let x = -2; while (x < W + 2) { const w = ri(5, 10), h = ri(4, 16), w2 = []; for (let yy = 2; yy < h + 20; yy += 3) for (let xx = 1; xx < w - 1; xx += 2) if (Math.random() < .35) w2.push([xx, yy, rand(0, 6.3)]); blds.push({ x, w, h, w2 }); x += w + ri(0, 1); } }
-  const hillFl = [...Array(40)].map(() => ({ u: rand(-1, 1), d: rand(0, .5), c: ['#3a4a86', '#5a4a8a', '#7a5a9a', '#2f3f74'][ri(0, 3)] }));
-  const skyA = ['#060920', '#0a0e2c', '#0f1338', '#161846', '#1f1d55', '#2c2362', '#3c2a6c'];
+  const skyA = ['#0a0b2a', '#120f3a', '#1d1548', '#2c1b56', '#3e2160', '#522666', '#6a2c6a'];
   const skyB = ['#0b0526', '#170a3d', '#2a0f55', '#43156a', '#641d78', '#8f2c80', '#c04a86'];
+  const pcols = ['#ff4d6d', '#ffd166', '#5fd6c8', '#b58ad8', '#ff8fab', '#7ad06a'];
   let shoot = null, nextShoot = 2500;
-  s.moonPos = () => [Math.round(W * .74), Math.round(H * .17 + s.cam * .45)];
+  s.moonPos = () => [Math.round(W * .78), Math.round(H * .1 + s.cam * .45)];
   s.draw = (t, dt) => {
     const m = s.magic, cam = s.cam, gy = s.gy + cam;
     sky(0, H, skyA.map((c, i) => mix(c, skyB[i], m)));
-    // aurora
-    if (m > .01) {
-      const base = H * .2 + cam * .4, cols = ['#5cf2c2', '#6fd3ff', '#c28bff', '#ff8fd0'];
+    if (m > .01) { const base = H * .16 + cam * .4, cols = ['#5cf2c2', '#6fd3ff', '#c28bff', '#ff8fd0'];
       for (let x = 0; x < W; x++) { const y = base + Math.sin(x * .07 + t * .0008) * 7 + Math.sin(x * .023 - t * .0005) * 9, len = 12 + Math.sin(x * .11 + t * .001) * 5, c = cols[Math.floor((Math.sin(x * .03 + t * .0004) + 1) * 1.99)];
         g.globalAlpha = .2 * m; g.fillStyle = c; g.fillRect(x, Math.round(y), 1, Math.round(len)); g.globalAlpha = .08 * m; g.fillRect(x, Math.round(y - 7), 1, 7); }
-      g.globalAlpha = 1;
-    }
-    for (const st of stars) { const y = ((st.y + cam * .3) % H + H) % H, a = .5 + .5 * Math.sin(t * .0025 + st.p); if (a > .25) px(st.x, y, a > .75 ? '#fff' : '#a9a3ff'); if (st.b && a > .8) { px(st.x - 1, y, '#6d68c8'); px(st.x + 1, y, '#6d68c8'); px(st.x, y - 1, '#6d68c8'); px(st.x, y + 1, '#6d68c8'); } }
+      g.globalAlpha = 1; }
+    for (const st of stars) { const y = ((st.y + cam * .3) % H + H) % H, a = .5 + .5 * Math.sin(t * .0025 + st.p); if (a > .25) px(st.x, y, a > .75 ? '#fff' : '#a9a3ff'); }
     for (const st of mstars) { if (st.m > m) continue; const y = ((st.y + cam * .3) % H + H) % H; if (Math.sin(t * .003 + st.p) > -.3) px(st.x, y, st.c); }
-    // shooting stars
     nextShoot -= dt * (1 + m * 3);
-    if (nextShoot < 0 && !shoot) { shoot = { x: rand(W * .2, W), y: rand(0, H * .3), l: 0 }; nextShoot = rand(2500, 5000); }
+    if (nextShoot < 0 && !shoot) { shoot = { x: rand(W * .2, W), y: rand(0, H * .25), l: 0 }; nextShoot = rand(2500, 5000); }
     if (shoot) { shoot.l += dt; const k = shoot.l / 700; for (let i = 0; i < 8; i++) { g.globalAlpha = (1 - i / 8) * (1 - k); px(shoot.x - k * 50 + i, shoot.y + k * 25 - i * .5, '#fff'); } g.globalAlpha = 1; if (k >= 1) shoot = null; }
-    // moon
     const [mx, my] = s.moonPos();
-    glow(mx, my, 22 + m * 8, '#fff1d6', .06 + m * .05); glow(mx, my, 14, '#fff1d6', .1);
-    disc(mx, my, 9, '#fff0cf'); disc(mx - 3, my - 2, 2, '#efdcb4'); disc(mx + 3, my + 3, 1, '#efdcb4'); px(mx + 4, my - 4, '#efdcb4');
-    if (T < s.wink) { px(mx - 3, my, '#5c3a4a'); px(mx - 4, my - 1, '#5c3a4a'); px(mx - 2, my - 1, '#5c3a4a'); rect(mx + 2, my - 1, 3, 1, '#5c3a4a'); px(mx - 1, my + 3, '#c24a66'); px(mx, my + 3, '#c24a66'); px(mx - 5, my + 2, '#ff9fb5'); px(mx + 5, my + 2, '#ff9fb5'); }
-    // valley city lights
-    const vy = gy + 2; rect(0, vy, W, Math.max(0, H - vy), '#0b0e27');
-    for (const b of blds) { rect(b.x, vy + 8 - b.h, b.w, b.h + 60, '#0e1230'); for (const w of b.w2) if (Math.sin(t * .0008 + w[2] * 3) > -.6) px(b.x + w[0], vy + 8 - b.h + w[1], '#ffcf70'); }
-    for (const l of lights) { const y = vy + 12 + l.y * (H - vy - 14); if (Math.sin(t * .002 + l.p) > -.5) { px(l.x, y, l.c); if (l.y > .5) glow(l.x + .5, y + .5, 1.6, l.c, .12); } }
-    // hill
-    for (let x = 0; x < W; x++) { const d = (x - cx) / (W * .42), hy = Math.round(gy + d * d * 40); if (hy < H) { rect(x, hy, 1, H - hy, '#131838'); px(x, hy, '#2b3a6a'); if ((x * 7) % 11 === 0 && hy + 3 < H) px(x, hy + 3 + (x % 5), '#1e2750'); } }
-    for (const f of hillFl) { const x = Math.round(cx + f.u * W * .42), d = f.u, hy = gy + d * d * 40 + 2 + f.d * (H - gy); if (hy < H) px(x, hy, f.c); }
-    // little tree with fairy lights
-    const tx = Math.round(W * .8), ty = Math.round(gy + Math.pow((tx - cx) / (W * .42), 2) * 40);
-    rect(tx, ty - 16, 2, 16, '#0d1030'); disc(tx + 1, ty - 20, 7, '#0f1436'); disc(tx - 3, ty - 16, 4, '#0f1436'); disc(tx + 5, ty - 16, 4, '#0f1436');
-    for (let i = 0; i < 7; i++) { const a = i / 7 * 6.28, lx = tx + 1 + Math.cos(a) * 5, ly = ty - 18 + Math.sin(a) * 4; if (Math.sin(t * .004 + i) > -.2) { px(lx, ly, '#ffd98a'); glow(lx + .5, ly + .5, 1.8, '#ffd98a', .2); } }
-    for (const f of flies) { const x = (f.x + Math.sin(t * .0006 + f.p) * 10 + W) % W, y = gy + f.y + Math.sin(t * .001 + f.p) * 5; if (Math.sin(t * .003 + f.p * 3) > 0) { px(x, y, '#e7ff8a'); glow(x + .5, y + .5, 2, '#e7ff8a', .15); } }
+    glow(mx, my, 18 + m * 8, '#fff1d6', .06 + m * .05); disc(mx, my, 7, '#fff0cf'); disc(mx - 2, my - 2, 1, '#efdcb4');
+    if (T < s.wink) { px(mx - 3, my, '#5c3a4a'); px(mx - 4, my - 1, '#5c3a4a'); px(mx - 2, my - 1, '#5c3a4a'); rect(mx + 1, my - 1, 3, 1, '#5c3a4a'); px(mx - 1, my + 3, '#c24a66'); px(mx, my + 3, '#c24a66'); px(mx - 5, my + 2, '#ff9fb5'); px(mx + 5, my + 2, '#ff9fb5'); }
+    for (let k = 0; k < 6; k++) drawSprite(HEART5, (k * 29 + 7) % W, H * .06 + (k * 13 % 26) + Math.sin(t * .002 + k) * 2 + cam * .2, { R: k % 2 ? '#ff8fab' : '#ff4d6d' });
+    // the restaurant facade
+    const top = gy - 44;
+    rect(0, top, W, 44, '#8a4232'); rect(0, top, W, 3, '#5a2a22'); rect(0, top + 3, W, 1, '#c2603a');
+    for (let x = 2; x < W; x += 26) { rect(x, top + 12, 12, 26, '#3a1a14'); disc(x + 6, top + 12, 6, '#3a1a14'); rect(x + 1, top + 13, 10, 25, '#ffb55e'); disc(x + 6, top + 13, 5, '#ffb55e'); glow(x + 6, top + 22, 10, '#ffb55e', .12); rect(x + 5, top + 8, 1, 30, '#3a1a14'); rect(x + 1, top + 24, 10, 1, '#3a1a14'); }
+    const sx = cx; rect(sx - 18, top - 13, 36, 13, '#1a1030'); rect(sx - 17, top - 12, 34, 11, '#2a1a40');
+    for (const [dx, h] of [[-4, 5], [-2, 7], [0, 8], [2, 7], [4, 5]]) rect(sx + dx - 10, top - 3 - h, 1, h, '#5fb87a');
+    drawSprite(HEART5, sx + 2, top - 9, { R: '#ff4d6d' }); drawSprite(HEART5, sx + 9, top - 9, { R: '#ffd166' });
+    for (const row of [0, 1]) { const y0 = Math.round(top - 26 - row * 9); for (let x = 0; x < W; x++) { const u = (x % 50) / 25 - 1; px(x, y0 + 4 * (1 - u * u), '#0a0718'); } for (let x = 1, i = 0; x < W; x += 5, i++) { const u = (x % 50) / 25 - 1; rect(x, y0 + 4 * (1 - u * u) + 1, 3, 3, pcols[(i + row) % 6]); } }
+    // patio
+    sky(gy - 2, H, ['#b0604a', '#9a5040', '#8a4a3a', '#7a4034', '#6a382e']);
+    for (let y = gy + 2, r = 0; y < H + cam; y += 6, r++) { rect(0, y, W, 1, '#5a2e26'); for (let x = (r * 5) % 12 - 12; x < W; x += 12) rect(x, y - 5, 1, 5, '#5a2e26'); }
+    // our table: two margaritas
+    const tx = 4; rect(tx, gy - 9, 14, 2, '#6a3a2a'); rect(tx + 6, gy - 7, 2, 7, '#4a2a1e'); rect(tx + 3, gy - 1, 8, 1, '#4a2a1e');
+    for (const gx of [tx + 2, tx + 9]) { rect(gx, gy - 13, 4, 1, '#ffffff'); rect(gx, gy - 12, 4, 2, '#b8f07a'); px(gx + 1, gy - 10, '#b8f07a'); px(gx + 2, gy - 10, '#b8f07a'); rect(gx + 1, gy - 10, 2, 1, '#d6ffe0'); px(gx + 1, gy - 9, '#e8e8f0'); px(gx + 2, gy - 9, '#e8e8f0'); px(gx + 4, gy - 13, '#7ad06a'); }
+    // cacti
+    for (const kx of [W - 8]) { rect(kx, gy - 4, 6, 4, '#c2603a'); rect(kx + 2, gy - 12, 2, 8, '#3f9a5a'); rect(kx + 1, gy - 9, 1, 2, '#3f9a5a'); rect(kx + 4, gy - 10, 1, 2, '#3f9a5a'); px(kx + 3, gy - 12, '#ff8fab'); }
   };
-  s.front = (dt) => {
+  s.front = () => {
     if (s.cue) { const k = 1 + (Math.floor(T / 500) % 2); const y = headY(boy) - 9 - (k - 1) * 2; drawSprite(HEART7, cx - 3 * k - 1, y, ICON_PAL, false, k); }
-    if (s.big) {
-      const b = s.big, k = Math.max(1, Math.round(b.k));
-      glow(b.x, b.y, 8 + k * 5, '#ff8fab', .15); glow(b.x, b.y, 4 + k * 3.5, '#ffb3c7', .15);
-      drawSprite(HEARTBIG, b.x - 3.5 * k, b.y - 3 * k, { R: '#ff4d6d', W: '#ffd1dc' }, false, k);
-      if (Math.random() < .5 && k < 4) spawn({ type: 'spark', x: b.x + rand(-4, 4), y: b.y + 4, vy: 10, life: 500, c: '#ff8fab' });
-    }
+    if (s.big) { const b = s.big, k = Math.max(1, Math.round(b.k)); glow(b.x, b.y, 8 + k * 5, '#ff8fab', .15); glow(b.x, b.y, 4 + k * 3.5, '#ffb3c7', .15); drawSprite(HEARTBIG, b.x - 3.5 * k, b.y - 3 * k, { R: '#ff4d6d', W: '#ffd1dc' }, false, k); if (Math.random() < .5 && k < 4) spawn({ type: 'spark', x: b.x + rand(-4, 4), y: b.y + 4, vy: 10, life: 500, c: '#ff8fab' }); }
     if (s.fill > 0) { g.globalAlpha = s.fill; rect(0, 0, W, H, '#ff4d6d'); g.globalAlpha = 1; }
   };
-  s.onTap = (x, y) => { const [mx, my] = s.moonPos(); if (Math.hypot(x - mx, y - my) < 12) { s.wink = T + 1600; SFX.boop(); } };
+  s.onTap = (x, y) => { const [mx, my] = s.moonPos(); if (Math.hypot(x - mx, y - my) < 10) { s.wink = T + 1600; SFX.boop(); } };
   s.focus = () => [cx, s.gy - 10];
   return s;
 }
-async function playHill() {
+
+async function playValentine() {
   const s = scene, { boy, girl } = s, cx = Math.round(W / 2);
-  chapter('CHAPTER 4', 'under the stars');
+  chapter('CHAPTER 4', 'February 14 · Agave Bandido');
   AudioSys.duck(.55, 2);
   await irisTo('blocks', 1, 1300, W / 2, s.gy - 12);
   await wait(1400);
@@ -1344,10 +1313,10 @@ $('#replay').addEventListener('click', () => location.reload());
 })();
 
 async function begin(at) {
-  const order = ['park', 'market', 'walk', 'hill'];
-  const make = { park: scenePark, market: sceneMarket, walk: sceneWalk, hill: sceneHill };
-  const play = { park: playPark, market: playMarket, walk: playWalk, hill: playHill };
-  const close = { park: 'circle', market: 'heart', walk: 'blocks' };
+  const order = ['sushi', 'after', 'walk', 'valentine'];
+  const make = { sushi: sceneSushi, after: sceneAfter, walk: sceneWalk, valentine: sceneValentine };
+  const play = { sushi: playSushi, after: playAfter, walk: playWalk, valentine: playValentine };
+  const close = { sushi: 'circle', after: 'heart', walk: 'blocks' };
   if (at === 'finale') return playFinale();
   if (at === 'surprise') { Fin.start(); $('#pink').style.opacity = 0; return playSurprise(); }
   mask = { type: 'circle', p: 0, cx: W / 2, cy: H / 2 };
